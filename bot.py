@@ -4,7 +4,6 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 import os
 
-print("ENV TOKEN:", os.environ.get("TELEGRAM_BOT_TOKEN"))
 
 # ------------------ CONFIG ------------------
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
