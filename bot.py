@@ -2,9 +2,12 @@ import sqlite3
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
+import os
+
+print("ENV TOKEN:", os.environ.get("TELEGRAM_BOT_TOKEN"))
 
 # ------------------ CONFIG ------------------
-TOKEN = "8542070197:AAEEAxA2W9dobRqboaK99EhNWdSO91Satn4"
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # ------------------ DATABASE ------------------
 conn = sqlite3.connect("expenses.db", check_same_thread=False)
@@ -198,6 +201,10 @@ async def delete_by_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     await update.message.reply_text(f"✅ נמחקו כל ההכנסות וההוצאות מתאריך {date_str}")
 
+
+# ------------------ token ------------------
+#if not TOKEN:
+#      raise ValueError("TELEGRAM_BOT_TOKEN is not set")
 
 # ------------------ MAIN ------------------
 def main():
