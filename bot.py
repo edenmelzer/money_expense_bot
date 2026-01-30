@@ -316,7 +316,7 @@ def main():
     app.add_handler(CommandHandler("delete", delete_by_date))
     app.add_handler(CommandHandler("search", search_date))
 
-    print("Bot is running...")
+    print("Bot is Running...")
     app.run_polling()
 
 
