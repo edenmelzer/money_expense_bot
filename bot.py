@@ -9,12 +9,15 @@ import os
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # ------------------ DATABASE ------------------
-RAILWAY_VOLUME_PATH = "/data/expenses.db"
+import os
 
-if os.path.exists("/data"):
-    db_path = RAILWAY_VOLUME_PATH
-else:
-    db_path = "expenses.db"
+RAILWAY_DATA_DIR = "/app/data"
+db_path = "expenses.db"
+
+if os.path.exists(RAILWAY_DATA_DIR):
+    db_path = os.path.join(RAILWAY_DATA_DIR, "expenses.db")
+    if not os.access(RAILWAY_DATA_DIR, os.W_OK):
+        print(f"Warning: No write access to {RAILWAY_DATA_DIR}")
 
 conn = sqlite3.connect(db_path, check_same_thread=False)
 cursor = conn.cursor()
