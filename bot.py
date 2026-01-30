@@ -12,23 +12,28 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 import os
 import sqlite3
 
-if os.getenv("RAILWAY_ENVIRONMENT"):
-    db_path = "/data/expenses.db"
+RAILWAY_PATH = "/etc/bot_data/expenses.db"
 
-    print(f"--- SERVER MODE --- Directory exists: {os.path.exists('/data')}")
+if os.getenv("RAILWAY_ENVIRONMENT"):
+    db_path = RAILWAY_PATH
+    print(f"--- SERVER MODE --- Directory exists: {os.path.exists('/etc/bot_data')}")
 else:
     db_path = "expenses.db"
     print("--- LOCAL MODE ---")
 
 try:
+    if os.getenv("RAILWAY_ENVIRONMENT") and not os.path.exists("/etc/bot_data"):
+        os.makedirs("/etc/bot_data", exist_ok=True)
+
     conn = sqlite3.connect(db_path, check_same_thread=False, timeout=10)
     cursor = conn.cursor()
-    print(f"Connected successfully to: {db_path}")
+    print(f"SUCCESS: Connected to {db_path}")
 except sqlite3.OperationalError as e:
-    print(f"CRITICAL ERROR: {e}")
-    db_path = "fallback_expenses.db"
+    print(f"STILL NO ACCESS to {db_path}: {e}")
+    db_path = os.path.join(os.getcwd(), "expenses.db")
     conn = sqlite3.connect(db_path, check_same_thread=False)
     cursor = conn.cursor()
+    print(f"USING EMERGENCY LOCAL PATH: {db_path}")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS expenses (
