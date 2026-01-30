@@ -9,16 +9,23 @@ import os
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # ------------------ DATABASE ------------------
-conn = sqlite3.connect("expenses.db", check_same_thread=False)
+RAILWAY_VOLUME_PATH = "/data/expenses.db"
+
+if os.path.exists("/data"):
+    db_path = RAILWAY_VOLUME_PATH
+else:
+    db_path = "expenses.db"
+
+conn = sqlite3.connect(db_path, check_same_thread=False)
 cursor = conn.cursor()
 
-# יצירת טבלה חדשה עם עמודת type
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS expenses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
     amount REAL NOT NULL,
     category TEXT,
-    type TEXT NOT NULL,  -- "expense" או "income"
+    type TEXT NOT NULL,
     date TEXT NOT NULL
 )
 """)
