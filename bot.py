@@ -84,6 +84,32 @@ def get_month_totals_by_category() -> dict:
     return data
 
 
+def format_summary(rows):
+    income_total = 0
+    expense_total = 0
+    lines = []
+
+    for category, t, total in rows:
+        if t == "income":
+            income_total += total
+            lines.append(f"🟢 {category}: +{total:.0f} ₪")
+        else:
+            expense_total += total
+            lines.append(f"🔴 {category}: -{total:.0f} ₪")
+
+    net = income_total - expense_total
+    sign = "+" if net > 0 else ""
+
+    summary = (
+        "\n".join(lines) +
+        f"\n\n💰 הכנסות: {income_total:.0f} ₪"
+        f"\n💸 הוצאות: {expense_total:.0f} ₪"
+        f"\n📊 נטו: {sign}{net:.0f} ₪"
+    )
+
+    return summary
+
+
 # ------------------ BOT LOGIC ------------------
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
@@ -115,14 +141,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     add_entry(amount, category, entry_type)
 
-    # חיווי רגיל: סה"כ שבועי + חודשי ללא קטגוריות
+    # חישוב שבועי וחודשי (קיים)
     week_income, week_expense = get_week_total()
     month_income, month_expense = get_month_total()
 
+    # ➕ תוספת: חישוב נטו
+    week_net = week_income - week_expense
+    month_net = month_income - month_expense
+
+    week_sign = "+" if week_net > 0 else ""
+    month_sign = "+" if month_net > 0 else ""
+
     reply = (
         "✅ נרשם בהצלחה\n\n"
-        f"📆 סה״כ השבוע:\nהכנסות: {week_income:.0f} ₪\nהוצאות: {week_expense:.0f} ₪\n\n"
-        f"🗓️ סה״כ החודש:\nהכנסות: {month_income:.0f} ₪\nהוצאות: {month_expense:.0f} ₪"
+        f"📆 סה״כ השבוע:\n"
+        f"הכנסות: {week_income:.0f} ₪\n"
+        f"הוצאות: {week_expense:.0f} ₪\n"
+        f"נטו: {week_sign}{week_net:.0f} ₪\n\n"
+        f"🗓️ סה״כ החודש:\n"
+        f"הכנסות: {month_income:.0f} ₪\n"
+        f"הוצאות: {month_expense:.0f} ₪\n"
+        f"נטו: {month_sign}{month_net:.0f} ₪"
     )
     await update.message.reply_text(reply)
 
@@ -134,17 +173,30 @@ async def week_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("📆 אין הוצאות או הכנסות השבוע")
         return
 
-    income_text = "\n".join(f"{cat}: {total:.0f} ₪" for cat, total in data["income"].items()) or "אין הכנסות"
-    expense_text = "\n".join(f"{cat}: {total:.0f} ₪" for cat, total in data["expense"].items()) or "אין הוצאות"
+    income_text = "\n".join(
+        f"{cat}: {total:.0f} ₪" for cat, total in data["income"].items()
+    ) or "אין הכנסות"
+
+    expense_text = "\n".join(
+        f"{cat}: {total:.0f} ₪" for cat, total in data["expense"].items()
+    ) or "אין הוצאות"
 
     total_income = sum(data["income"].values())
     total_expense = sum(data["expense"].values())
 
+    # ➕ תוספת: נטו
+    net = total_income - total_expense
+    sign = "+" if net > 0 else ""
+
     await update.message.reply_text(
         f"📆 סה״כ השבוע לפי קטגוריות:\n"
-        f"הכנסות:\n{income_text}\nסה״כ: {total_income:.0f} ₪\n\n"
-        f"הוצאות:\n{expense_text}\nסה״כ: {total_expense:.0f} ₪"
+        f"הכנסות:\n{income_text}\n"
+        f"סה״כ הכנסות: {total_income:.0f} ₪\n\n"
+        f"הוצאות:\n{expense_text}\n"
+        f"סה״כ הוצאות: {total_expense:.0f} ₪\n\n"
+        f"📊 נטו השבוע: {sign}{net:.0f} ₪"
     )
+
 
 
 async def month_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -153,17 +205,30 @@ async def month_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🗓️ אין הוצאות או הכנסות החודש")
         return
 
-    income_text = "\n".join(f"{cat}: {total:.0f} ₪" for cat, total in data["income"].items()) or "אין הכנסות"
-    expense_text = "\n".join(f"{cat}: {total:.0f} ₪" for cat, total in data["expense"].items()) or "אין הוצאות"
+    income_text = "\n".join(
+        f"{cat}: {total:.0f} ₪" for cat, total in data["income"].items()
+    ) or "אין הכנסות"
+
+    expense_text = "\n".join(
+        f"{cat}: {total:.0f} ₪" for cat, total in data["expense"].items()
+    ) or "אין הוצאות"
 
     total_income = sum(data["income"].values())
     total_expense = sum(data["expense"].values())
 
+    # ➕ תוספת: נטו
+    net = total_income - total_expense
+    sign = "+" if net > 0 else ""
+
     await update.message.reply_text(
         f"🗓️ סה״כ החודש לפי קטגוריות:\n"
-        f"הכנסות:\n{income_text}\nסה״כ: {total_income:.0f} ₪\n\n"
-        f"הוצאות:\n{expense_text}\nסה״כ: {total_expense:.0f} ₪"
+        f"הכנסות:\n{income_text}\n"
+        f"סה״כ הכנסות: {total_income:.0f} ₪\n\n"
+        f"הוצאות:\n{expense_text}\n"
+        f"סה״כ הוצאות: {total_expense:.0f} ₪\n\n"
+        f"📊 נטו החודש: {sign}{net:.0f} ₪"
     )
+
 
 
 async def undo_last(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -201,6 +266,34 @@ async def delete_by_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ נמחקו כל ההכנסות וההוצאות מתאריך {date_str}")
 
 
+async def search_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    try:
+        target = datetime.strptime(context.args[1], "%d/%m/%Y").date()
+    except:
+        await update.message.reply_text("פורמט לא תקין. דוגמה:\nsearch date 14/02/2026")
+        return
+
+    cursor.execute(
+        """
+        SELECT category, type, SUM(amount)
+        FROM expenses
+        WHERE user_id = ? AND date = ?
+        GROUP BY category, type
+        """,
+        (user_id, target.isoformat())
+    )
+
+    rows = cursor.fetchall()
+    if not rows:
+        await update.message.reply_text("אין נתונים לתאריך הזה")
+        return
+
+    await update.message.reply_text(
+        f"📅 סיכום ל־{target.strftime('%d/%m/%Y')}:\n\n" +
+        format_summary(rows)
+    )
+
 # ------------------ token ------------------
 #if not TOKEN:
 #      raise ValueError("TELEGRAM_BOT_TOKEN is not set")
@@ -214,6 +307,7 @@ def main():
     app.add_handler(CommandHandler("month", month_summary))
     app.add_handler(CommandHandler("undo", undo_last))
     app.add_handler(CommandHandler("delete", delete_by_date))
+    app.add_handler(CommandHandler("search", search_date))
 
     print("Bot is running...")
     app.run_polling()
