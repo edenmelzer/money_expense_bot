@@ -215,6 +215,16 @@ async def week_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📊 נטו השבוע: {sign}{net:.0f} ₪"
     )
 
+async def send_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if os.path.exists(db_path):
+        with open(db_path, 'rb') as f:
+            await update.message.reply_document(document=f, filename="expenses.db")
+    else:
+        await update.message.reply_text("❌ הקובץ לא נמצא")
+
+# בתוך פונקציית main, תוסיף את ה-Handler:
+# app.add_handler(CommandHandler("getdb", send_db))
+
 
 
 async def month_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
