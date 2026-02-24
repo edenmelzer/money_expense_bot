@@ -336,6 +336,7 @@ def main():
     app.add_handler(CommandHandler("undo", undo_last))
     app.add_handler(CommandHandler("delete", delete_by_date))
     app.add_handler(CommandHandler("search", search_date))
+    app.add_handler(CommandHandler("getdb", send_db))
 
     print("The Bot is Running...")
     app.run_polling()
